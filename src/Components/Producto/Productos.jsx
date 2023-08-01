@@ -9,7 +9,9 @@ import { Link } from "react-router-dom";
 const Productos = () => {
   const [productos, setProducto] = useState([]);
   const [category, setCategory] = useState([]);
+  const [currency, setCurrency] = useState(0);
   const [search, setSearch] = useState("");
+  const environment = import.meta.env.VITE_ACCESS_KEY;
 
   useEffect(() => {
     const fechaData = async () => {
@@ -23,13 +25,20 @@ const Productos = () => {
         );
         const dataCategorys = await responseCategorys.json();
         setCategory(dataCategorys);
+
+        const responseCurrency = await fetch(
+          `https://v6.exchangerate-api.com/v6/${environment}/latest/USD`
+        );
+        const dataCurrency = await responseCurrency.json();
+        // console.log(dataCurrency)
+        setCurrency(dataCurrency.conversion_rates.GTQ);
       } catch (error) {
         console.error(error.message);
       }
     };
 
     fechaData();
-  }, []);
+  }, [environment]);
 
   const searchByCategory = async (category) => {
     try {
@@ -92,7 +101,7 @@ const Productos = () => {
       </form>
 
       <div className="row">
-        <div className="col-md-3">
+        <div className="col-md-3 animated animate__fadeIn">
           {/* Render the list of categories */}
           <div className="list-group">
             <h5 className="list-group-item active text-center">CATEGORÍAS</h5>
@@ -107,38 +116,51 @@ const Productos = () => {
             ))}
           </div>
         </div>
+
         <div className="col-md-9">
-          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            {productos.map((item, index) => (
-              <div key={index} className="col mb-4">
-                <div className="card">
-                  <img src={item.images[0]} alt="" className="card-img-top" />
-                  <div className="card-body">
-                    <span className="bg-success position-relative badge rounded-pill mb-1">
-                      Stock
-                      <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        {item.stock}+
+          {productos.length === 0 ? (
+            <div className="alert alert-danger h4 text-center">
+              No se encontraron datos
+            </div>
+          ) : (
+            <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4  animated  animate__fadeIn">
+              {productos.map((item, index) => (
+                <div key={index} className="col mb-4">
+                  <div className="card">
+                    <img src={item.images[0]} alt="" className="card-img-top" />
+                    <div className="card-body">
+                      <span className="bg-success position-relative badge rounded-pill mb-1">
+                        Stock
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                          {item.stock}+
+                        </span>
                       </span>
-                    </span>
-                    <h5 className="card-title">{item.title}</h5>
-                    <p className="card-text">{item.description}</p>
-                    <strong className="precio h3 text-danger">
-                      Q.{item.price}.00
-                    </strong>
-                    <div className="d-grid gap-2 d-flex justify-content-center mt-3">
-                      <Link
-                        to={`/detallesproducto/${item.id}`}
-                        className="btn btn-info btn-rounded btn-sm "
-                        style={{ color: "white", fontSize: "18px" }}
-                      >
-                        Ver detalles
-                      </Link>
+                      <h5 className="card-title text-center">{item.title}</h5>
+                      <p className="card-text text-justify">
+                        {item.description}
+                      </p>
+                      <strong className="precio h3 text-danger">
+                        Q{" "}
+                        {Number(
+                          (item.price * currency).toFixed(2)
+                        ).toLocaleString("es-GT", { minimumFractionDigits: 2 })}
+                        {/* Q {(item.price * currency).toFixed(2)} */}
+                      </strong>
+                      <div className="d-grid gap-2 d-flex justify-content-center mt-3">
+                        <Link
+                          to={`/detallesproducto/${item.id}`}
+                          className="btn btn-info btn-rounded btn-sm "
+                          style={{ color: "white", fontSize: "15px" }}
+                        >
+                          Ver detalles
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

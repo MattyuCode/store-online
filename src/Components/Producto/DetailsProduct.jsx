@@ -4,8 +4,10 @@ import { BsArrowLeft } from "react-icons/bs";
 import { ThreeCircles } from "react-loader-spinner";
 
 const DetailsProduct = () => {
+  const environment = import.meta.env.VITE_ACCESS_KEY;
   const [productos, setProducto] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currency, setCurrency] = useState(0);
   const { ID } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   // console.log(productos.images[0]);
@@ -18,13 +20,19 @@ const DetailsProduct = () => {
         const data = await response.json();
         setProducto(data);
         setIsLoading(false);
+
+        const convert = await fetch(
+          `https://v6.exchangerate-api.com/v6/${environment}/latest/USD`
+        );
+        const dataco = await convert.json();
+        setCurrency(dataco.conversion_rates.GTQ);
       } catch (error) {
         console.log(error);
         setIsLoading(false);
       }
     };
     fechaData();
-  }, [ID]);
+  }, [ID, environment]);
 
   if (isLoading) {
     return (
@@ -87,10 +95,17 @@ const DetailsProduct = () => {
 
               <p className="">{productos.brand}</p>
               <p className="card-text">{productos.description}</p>
-              <p>{productos.rating}</p>
+              <p>
+                {productos.rating}{" "}
+                <strong style={{ fontSize: "20px", fontWeight: "800" }}>
+                  |
+                </strong>
+              </p>
               <p className="card-text">
                 <strong style={{ color: "red", fontSize: "35px" }}>
-                  Q.{productos.price}.00
+                  Q {Number((productos.price * currency).toFixed(2)).toLocaleString("es-GT", {minimumFractionDigits: 2})}
+                  {/* Q.{(productos.price * currency).toFixed(2)} */}
+
                 </strong>
               </p>
             </div>
